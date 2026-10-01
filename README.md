@@ -1,308 +1,352 @@
-**开源不易，还请您点个Star 多谢！🎉**
+# FlashGo Plus（黑马点评 Plus）项目速查手册
 
-对于 Java 程序员而言，项目是简历与面试的核心竞争力。仅停留在 CRUD 或 Demo 级项目，很难体现工程化能力与架构思维。“黑马点评” 这个项目相信对于很多人来说并不陌生，甚至它是很多人开始学习 Java 语言的启蒙实战项目，也有不少人用它去面试，拿到了 Offer。它把“八股文”转化为可落地的工程方案：不背答案，直接在项目中应用与验证。
+## 一、项目概述
 
-## 黑马点评项目介绍 
-黑马点评是“本地生活与商户运营”场景的综合实战项目，包含商户浏览与查询、优惠券发放与抢购、达人探店、好友关注、签到与 UV 统计等核心业务。围绕“高并发下的优惠券秒杀”与“热点查询”的真实问题，提供端到端的稳定性与一致性解决方案。
+| 项目 | 说明 |
+|------|------|
+| **名称** | flashgo-plus（黑马点评 Plus 升级版） |
+| **类型** | 企业级高并发电商点评平台 |
+| **核心场景** | 优惠券秒杀、热点查询、高并发稳定性 |
+| **技术栈** | Spring Boot 3.5.4 + Vue 3 + Kafka + Redis + MySQL + ShardingSphere |
+| **Java 版本** | JDK 17+ |
+| **一句话定位** | 高并发秒杀电商点评平台。核心解决：库存超卖、缓存与DB不一致、MQ消息丢失、突发流量击垮系统。技术路线：Redis+Lua原子扣减 → Kafka异步下单 → Outbox+对账保证最终一致性 |
 
-## 黑马点评功能回顾 
+黑马点评是"本地生活与商户运营"场景的综合实战项目，包含商户浏览与查询、优惠券发放与抢购、达人探店、好友关注、签到与UV统计等核心业务。Plus 版本将 SpringBoot 升级到 3.5.4，所有中间件升级到最新版本，补齐高并发稳定性、限流、数据一致性保障、可观测与故障闭环等企业级能力。
 
-**主要重点围绕 Redis 的多种数据结构与实战场景展开：**
+---
 
-- **短信登录：** 基于 Redis 共享 Session 实现分布式会话管理。
-- **商户查询缓存：** 认知并实战缓存穿透、缓存击穿、缓存雪崩问题的应对方式。
-- **优惠券秒杀：** 基于 Redis 计数器 + Lua 的原子扣减；理解分布式锁（含 Redisson）；掌握三种消息队列的用法与对比。
-- **附近的商户：** 使用 Redis GEO 实现地理位置检索与排序。
-- **UV 统计：** 使用 HyperLogLog 完成海量去重统计。
-- **用户签到：** 利用 BitMap 进行用户签到与统计。
-- **好友关注：** 基于 Set 实现关注、取消关注、共同关注等社交关系。
-- **达人探店：** 用 List 实现点赞列表，用 SortedSet 实现点赞排行榜。
-
-**库存扣减相关功能**：
-
-- 优惠券秒杀中的库存超卖问题与乐观锁方案。
-- Redis 分布式锁与 Redisson 锁的选型与用法。
-- 使用 Redis 判断秒杀资格与消息队列的简单应用。
-
-## 黑马点评的问题
- 黑马点评项目作为练手学习来说，很不错能够快速进入实战，但是要拿去面试使用，特别是要面大厂的话，就有点不够看了，很容易问到：
-
-- **流量突发时，如何动态的限流？**
-- **Redis宕机了怎么办？**
-- **Redis数据丢失了怎么办？**
-- **MQ宕机了怎么办？**
-- **MQ消息丢失了怎么办？**
-- **MQ消息延迟消费了怎么办？**
-- **数据库的库存数量和Redis中的不一致怎么办？**
-- **Redis恢复后，丢失的数据要怎么恢复？**
-
-这些问题在黑马点评中并没有得到解决，而恰恰这些还正是大厂特别看中的 **“解决问题的能力”**，所以本人推出 **黑马点评 Plus 版本**，来解决这些疑难重症，并且额外再引入新的功能，让这个项目彻底的无懈可击！
-点评中并没有得到解决，而恰恰这些还正是大厂特别看中的 “解决问题的能力”，所以本人推出 **黑马点评 Plus 版本**，来解决这些疑难重症，并且额外再引入新的功能，让这个项目彻底的无懈可击！
-
-# 一、黑马点评 Plus 是什么 🚀
-
-首先，黑马点评 Plus 将 SpringBoot 版本升级到了主流成熟的 SpringBoot3，并将其他的中间件，如：MybatisPlus、Redis、Redisson、Kafka都升级到了最新版本。
-
-并且功能在普通版能力的基础上，补齐 **“高并发稳定性、限流功能、令牌的发送、数据一致性保障、可观测与故障闭环”** 等多种维度
-
-### 黑马点评 Plus 项目详细讲解 🔗：[👉 点击查看讲解](https://www.javaup.chat/hmdp-plus/overview/project-change)
-
-- 🚦 **全链路流控：** 令牌前置授权 + 令牌桶限流，将“资格判断”与“流量控制”前置到入口，显著降低突发流量对系统的冲击。
-- 🗄️ **多层缓存策略：** 本地缓存 + Redis 缓存 + 空值缓存 + 布隆过滤器，有效降低 DB 压力与热点击穿风险。
-- ✅ **缓存问题的完美解决：** 多层缓存与双重锁检测，辅以空值缓存与布隆过滤器，弥补普通版本的不足，彻底缓解穿透与击穿。
-- 🔁 **一致性闭环：** Redis 扣减、订单创建、消息投递、数据库落库之间建立明确的状态流转与补偿策略。
-- 📦 **MQ 可靠性：** 发布确认、重试退避、死信与延迟队列、消费幂等与去重，提升消息处理鲁棒性。
-- 🔍 **可观测与故障分析：** 聚焦链路瓶颈、异常源定位与版本压测对比，形成闭环优化机制。
-- 📈 **运营能力：** 支持“每日 Top 买家”和“订阅-通知-领取”的活动玩法，提升用户参与度与复购。
-- 🗂️ **分库分表与路由设计：** 分库分表与全局 ID 生成，订单与对账日志按需拆分，为数据规模增长与高并发写入提供保障。
-
-![](https://multimedia-javaup.cn/hmdp-plus/%E6%80%9D%E7%BB%B4%E5%AF%BC%E5%9B%BE.png)
-
-# 二、Plus 版本解决了普通版本的哪些问题与痛点!
-## 2.1 抢购业务的关键痛点
-![](https://multimedia-javaup.cn/hmdp-plus/%E7%A7%92%E6%9D%80%E4%BC%98%E6%83%A0%E5%88%B8.png)
-- **流量入口缺少前置控制**
-    - ⚠️ **问题：** 缺乏权限令牌与令牌桶限流，突发洪峰直接压垮热点接口。
-    - 🔹 **Plus 方案：令牌前置授权与令牌桶限流，支持动态阈值与人群优先级（如 VIP）。**
-
-- **扣减链路缺少一致性闭环**
-    - ⚠️ **问题：** Redis 扣减成功但订单创建失败、消息未投递或延迟，导致库表与缓存不一致。
-    - 🔹 **Plus 方案：Redis记录、本地消息表、订单对账日志、定时一致性校验与补偿队列，消费端幂等与去重。**
-
-- **MQ 可靠性不足**
-    - ⚠️ **问题：** 使用 RedisStream，宕机后消息丢失，无发布确认、重试退避、延迟/死信队列，消息丢失/重复/乱序未处理。
-    - 🔹 **Plus 方案：使用 Kafka，并在生产端/消费端确认、指数退避重试、DLQ/延迟队列、消费幂等、发送失败/消费失败/消费超时的各种处理。**
-
-- **数据层扩展不足**
-    - ⚠️ **问题：** 订单等热点数据未分库分表，大数量情况下性能低下，读扩散与热点聚集难抑制。
-    - 🔹 **Plus 方案：Sharding 路由、全局 ID 生成、分片内对账与差异补偿。**
-
-- **故障场景处理缺失**
-    - ⚠️ **问题：** Redis 主从切换数据丢失、Lua 宕机、扣减成功但订单失败 等没有对应的处理策略。
-    - 🔹 **Plus 方案：消息记录信息、操作日志记录、可重入脚本设计、补偿扫描与自动回滚机制。**
-
-## 2.2 扩展性的关键痛点
-![](https://multimedia-javaup.cn/hmdp-plus/%E4%BC%98%E6%83%A0%E5%88%B8%E7%9A%84%E6%9F%A5%E8%AF%A2.png)
-- **分布式锁使用粗糙**
-    - ⚠️ **问题：** 锁的设计类型单一，没有考虑到多种锁类型，锁超时处理方式。
-    - 🔹 **Plus 方案：对 Redisson 重构设计，支持的锁类型：读锁、写锁、公平锁、非公平锁。锁的使用：注解化、命令式、方法级。可自定义处理失败策略。**
-
-- **缓存策略单一**
-    - ⚠️ **问题：** 缓存穿透/击穿的解决方案不够完美：仅依赖单层 Redis，未引入空值缓存、布隆过滤器、本地缓存与逻辑过期。
-    - 🔹 **Plus 方案：本地 + Redis 双层缓存、空值缓存、布隆过滤器、双重锁检测、逻辑过期与异步重建。**
-
-- **运营策略不足**
-    - ⚠️ **问题：** 缺少 Top 买家统计、订阅通知与开抢前预通知，拉新促活能力有限。
-    - 🔹 **Plus 方案：SortedSet 榜单、ZSet 订阅、Redisson 延迟队列分片设计提高效率，执行预通知与去重控频，降噪通知。**
-
-- **可观测性薄弱**
-    - ⚠️ **问题：** 缺少耗时画像、异常聚合、版本压测对比，难以定位瓶颈与评估优化。
-    - 🔹 **Plus 方案：链路埋点、请求画像与异常聚合，关键接口压测与版本对比报告。**
-
-# 三、如何启动项目
--  [准备项目启动条件](https://javaup.chat/hmdp-plus/startup/prerequisites)
--  [如何安装项目需要的中间件环境](https://javaup.chat/hmdp-plus/startup/install-middlewares)
--  [后端项目部署启动](https://javaup.chat/hmdp-plus/startup/backend-deploy)
--  [前端项目部署启动](https://javaup.chat/hmdp-plus/startup/frontend-deploy)
--  [项目文档和视频目录](https://javaup.chat/hmdp-plus/overview/project-change)
-  
-# 四、关键问题解决的能力详解
-
-## 4.1 缓存穿透与缓存击穿的组合解法
-
-**核心思路：** 在读取链路中构建“多道防线”，保证数据库与热点数据的稳定性。
-
-### 1) 防穿透 ：
-
-- **空值缓存：** 数据库查不到时，将空结果写入 Redis，设置短 TTL，避免同一非法键反复打到 DB。
-- **布隆过滤器：** 将合法 ID 集合放入布隆过滤器，拦截绝大多数非法请求（误判率可控）。
-
-### 2) 防击穿 ：
-
-- **本地缓存 + Redis 缓存：** 双层缓存减少瞬时热点对 Redis 的压力，降低跨网络成本。
-- **双重锁检测（Double-Check-Locking）：** 只有一个线程进入重建逻辑，其余线程走缓存或短路返回，避免并发重建风暴。
-- **逻辑过期与异步重建：** 热点数据过期时不立刻失效，先返回旧值，再异步重建新值，削峰填谷。
-- **预热与热点标记：** 提前将热门商户/优惠券加载至缓存，结合定时刷新与失效策略。
-
-### 3) 读流程参考（简化伪流程） ：
+## 二、模块结构（15 个子模块，插件化架构）
 
 ```
-查本地缓存 → 命中返回
-未命中 → 查布隆过滤器（非法直接空值返回）
-合法 → 查 Redis（命中返回；空值则短路返回）
-Redis 未命中 → 获取重建锁 → 双重检查 → 负载保护 + DB 查询 → 写入空值/实体缓存 → 释放锁 → 返回
+flashgo-plus
+├── flashgo-common                          # 公共枚举/异常/工具类
+├── flashgo-core-service                    # 主业务入口 (Spring Boot, :8085)
+├── flashgo-sharding                        # ShardingSphere-JDBC 分库分表
+├── flashgo-parameter                       # DTO/VO 参数定义
+├── flashgo-id-generator-framework          # 雪花算法 + Redis 注册 workerId
+├── flashgo-redis-tool-framework/
+│   ├── flashgo-redis-common-framework      #   Redis 自动配置
+│   ├── flashgo-redis-framework             #   缓存封装 (Cache-Aside)
+│   └── flashgo-redis-rate-limit-framework  #   令牌桶/滑动窗口限流
+├── flashgo-redisson-framework/
+│   ├── flashgo-bloom-filter-framework      #   声明式布隆过滤器
+│   ├── flashgo-redisson-common-framework   #   Redisson 公共配置
+│   ├── flashgo-repeat-execute-limit-framework  # @RepeatExecuteLimit 幂等
+│   ├── flashgo-service-lock-framework      #   @ServiceLock 分布式锁
+│   └── flashgo-service-delay-queue-framework   # 延迟队列
+├── flashgo-mq-framework/
+│   ├── flashgo-mq-common-framework         #   MessageExtend 消息信封
+│   ├── flashgo-mq-producer-framework       #   AbstractProducerHandler 模板
+│   └── flashgo-mq-consumer-framework       #   AbstractConsumerHandler 模板
+└── flashgo-vue3                            # 前端 (Vue 3 + Element Plus, :5173)
 ```
 
-## 4.2 令牌前置授权 + 令牌桶限流
+**依赖原则**：`flashgo-core-service` 依赖所有框架模块，框架模块之间互不依赖——任一根架模块可被独立替换。
 
-- **权限令牌：** 抢购前先申请“权限令牌”，未持有令牌者不进入扣减链路，保障后端资源。
-- **令牌桶：** 在入口按速率放行请求，避免瞬时洪峰压垮系统；支持动态桶容量与优先级（VIP/历史高价值用户）。
-- **实现要点：** 基于 Redis 的限流器，实现分布式环境下的统一流控；令牌与资格在 Redis 中统一管理与过期清理。
+---
 
-## 4.3 Redis 架构问题与故障闭环
+## 三、技术栈
 
-**典型问题与应对：**
+### 后端
 
-- **扣减成功后服务宕机：** 使用“扣减记录 + 事务外的可靠投递（Outbox）”模型，服务恢复后自动补发消息并对账。
-- **Lua 执行过程中宕机：** Lua 脚本设计幂等与可重入；扣减与记录整体原子；补偿任务扫描半事务状态进行回滚或重试。
-- **主从切换的数据丢失：** 评估复制与持久化策略（AOF/RDB），关键扣减记录落地到“对账日志”并周期性校验。
-- **Redis 与数据库对账：** 引入“扣减记录表/订单对账日志表”，按照订单流水与扣减流水做一致性比对，差异项进入补偿队列。
-- **数据库有订单、Redis 丢数据：** 按订单路由表回查对应分片，补写 Redis 或同步触发补偿流程。
-- **Redis 扣减成功但订单创建失败：** 消费端幂等 + 事务边界控制，失败写入对账日志并触发补偿（回滚余票或再次下单）。
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Spring Boot | 3.5.4 | 应用框架 |
+| MyBatis Plus | 3.5.7 | ORM |
+| ShardingSphere JDBC | 5.3.2 | 分库分表 (2库：flashgo_0, flashgo_1) |
+| Redisson | 3.52.0 | 分布式锁、布隆过滤器、延迟队列 |
+| Kafka | — | 异步消息（秒杀订单处理） |
+| Redis | 6.0.8 | 缓存、限流、会话、BitMap签到、HyperLogLog UV统计、GEO附近商户 |
+| Caffeine | — | 本地进程内缓存 |
+| Sa-Token | 1.43.0 | 权限认证 |
+| Knife4j | 4.3.0 | API 文档 |
+| Hutool | 5.8.25 | 工具库 |
+| Micrometer + Prometheus | — | 可观测性指标 |
+| FastJSON | 2.0.9 | JSON 处理 |
+| Log4j2 | 2.17.0 | 日志 |
 
-## 4.4 MQ 架构问题与一致性保障
+### 前端
 
-**围绕“扣减 → 下单 → 通知/发券”的链路设计消息可靠性：**
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Vue | 3.5.13 | 前端框架 |
+| Vue Router | 4.5 | 路由 |
+| Pinia | 3.0 | 状态管理 |
+| Element Plus | 2.9 | UI 组件库 |
+| Axios | 1.8 | HTTP 客户端 |
+| Vite | 6.2 | 构建工具 |
 
-- **生产端：** 发布确认（Confirm）、失败回退与重试（指数退避），消息持久化（可靠队列）。
-- **消费端：** 幂等处理（基于业务唯一键与去重表）、异常重试、死信队列（DLQ）隔离。
-- **延迟队列：** 用于“开抢前预通知”“订单超时关闭”等场景。
-- **一致性策略：** 配合 Outbox 模式或本地消息表，实现“写库成功即投递消息”的最终一致性。
-- **乱序与延迟：** 在消费端做版本校验或时间窗容忍策略，保障数据与状态不被旧消息覆盖。
+---
 
-## 4.5 请求疑难杂症与链路观测
+## 四、数据库架构（分库分表）
 
-- **废弃订单获取：** 按订单状态与超时时间进行清理与标记，沉淀“废弃订单视图”，供运营与对账使用。
-- **链路耗时分析：** 埋点统计每个关键步骤耗时，生成请求画像，识别瓶颈（DB/Redis/MQ/锁等待等）。
-- **异常定位：** 将错误栈与请求上下文相关联，按版本/接口/商户维度聚合，提升排障效率。
-- **压测画像：** 对“节目详情”“生成订单”等关键接口做版本化压测报告，横向对比优化效果。
+### 分片表（8 张）
 
-## 4.6 分库分表设计与路由
+| 表名 | 分库键 | 分表键 | 说明 |
+|------|--------|--------|------|
+| tb_voucher_order | user_id | voucher_id | 订单（user_id 分库保证我的订单单库路由，voucher_id 分表打散秒杀热点） |
+| tb_voucher_order_router | order_id | order_id | 订单路由表（解决按 order_id 查订单的非分片键查询） |
+| tb_seckill_voucher | voucher_id | voucher_id | 秒杀优惠券 |
+| tb_voucher | id | id | 普通优惠券 |
+| tb_user | id | id | 用户 |
+| tb_user_info | user_id | user_id | 用户信息 |
+| tb_user_phone | phone (HASH_MOD) | phone (HASH_MOD) | 用户手机号（支持手机号反向查询） |
+| tb_voucher_reconcile_log | order_id | order_id | 对账日志 |
 
-- **拆分对象：** 用户表、用户信息表、用户手机号表、优惠券表、秒杀优惠券表、优惠券订单表、订单路由表、订单对账日志表。
-- **路由策略：** 按用户或店铺维度做分片，订单类表按订单号或用户 ID 做路由，保证热点均衡与查询可达。
-- **全局 ID：** 引入全局 ID 生成器（如雪花、号段、Leaf 等），保障跨分片唯一性与有序性。
-- **对账与补偿：** 定时任务在分片内做一致性校验，差异项进入补偿流程，结合 MQ 与 Redis 进行回滚或重试。
+### 广播表（7 张，每个库全量副本）
 
-![](https://picture-1306508146.cos.ap-beijing.myqcloud.com/hmdp-plus/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8.png)
+`tb_blog`, `tb_blog_comments`, `tb_follow`, `tb_rollback_failure_log`, `tb_shop`, `tb_shop_type`, `tb_sign`
 
-## 4.7 统计“店铺每日 Top 买家” 
+### 跨库查询策略
 
-- **设计：** 每个店铺每天一个 Key，采用 SortedSet 记录用户购买额或订单数，分值为贡献值，成员为用户 ID。
-- **写入：** 订单创建成功后写入统计集；设置合理 TTL（如 7~30 天）以控制存储；每日零点归档与榜单快照。
-- **展示：** 支持按店铺维度查询 TopN；可结合用户等级做营销触达。
+- **路由表**：tb_voucher_order_router，两步查询替代跨库 JOIN
+- **广播表**：基础数据每库全量，支持库内 JOIN
+- **应用层组装**：Java 层分别查询后手动拼接（如 SeckillVoucherFullModel）
 
-## 4.8 订阅通知（余票补充与取消回流）
+### 全局 ID 生成
 
-- **设计：** 当库存不足时，用户加入订阅集合（ZSet，分值为订阅时间或优先级）。
-- **触发：** 库存补充或订单取消回流时，按订阅时间最早（或优先级最高）挑选用户，发送通知或自动为其保留资格。
-- **保障：** 通知链路纳入 MQ 可靠投递与延迟重试；控制幂等，避免重复通知。
+雪花算法（SnowflakeIdGenerator）：1位符号 + 41位时间戳 + 5位数据中心 + 5位机器ID + 12位序列号。Worker ID 通过 Redis Lua 原子分配。时钟回拨使用 `Thread.sleep(offset*2)` 保持锁不释放。
 
-## 4.9 通知领取（开抢前 2 分钟预通知）
+---
 
-- **延迟队列：** 使用 Redisson 重构优化的延迟队列在活动开始前 2 分钟发送消息。
-- **人群：** 从“用户等级集合”“每日 Top 买家”集合中抽取用户，支持随机与优先级混合策略。
-- **去重与速率控制：** 保证通知不重复与速率不超限，维护良好用户体验与系统负载。
+## 五、核心业务流程
 
-![](https://multimedia-javaup.cn/hmdp-plus/%E8%AE%A2%E9%98%85%E9%80%9A%E7%9F%A5.png)
+### 秒杀下单全链路
 
-# 五、架构设计的能力详解 🏗️
+```
+用户点击抢购
+  ↓
+① 令牌前置授权 → 令牌桶限流
+  ↓
+② doSeckillVoucherV2() Java 侧准备
+  ├── queryByVoucherId(): Caffeine → Redis(无锁) → 布隆 → 空值缓存 → MySQL(加锁)
+  ├── loadVoucherStock(): 确保 Redis 库存存在
+  ├── verifyUserLevel(): 会员等级校验
+  └── SnowflakeIdGenerator.nextId(): 生成 orderId + traceId
+  ↓
+③ Lua 原子执行 (seckillVoucher.lua)
+  ├── 校验: 活动时间、状态、库存>0、未重复下单
+  ├── incrby stock -1 + sadd userSet + hset traceLog
+  └── 返回 {code, beforeQty, deductQty, afterQty}
+  ↓
+④ Kafka 异步发送 (SeckillVoucherProducer)
+  ├── MessageExtend{uuid, key, producerTime, messageBody}
+  ├── CompletableFuture 回调
+  └── 发送失败 → afterSendFailure → Redis 回滚 (指数退避3次+15%jitter)
+  ↓
+⑤ Kafka 消费 (SeckillVoucherConsumer)
+  ├── beforeConsume: 延迟>10s → 丢弃+回滚
+  ├── doConsume → createVoucherOrderV2(@RepeatExecuteLimit 幂等 + @Transactional)
+  ├── afterConsumeSuccess: 清理订阅+Top买家统计
+  └── afterConsumeFailure: Redis回滚 + 异常重抛 → Kafka 重试
+  ↓
+⑥ DB 持久化
+  ├── 幂等检查 (基于 message.uuid)
+  ├── UPDATE stock = stock-1 WHERE stock>0（乐观锁防超卖）
+  ├── INSERT voucher_order + router + reconcile_log
+  └── 写 Redis 缓存 (TTL 60s)
+```
 
-## 5.1 MQ 组件设计
+### 一致性保障：三层对账
 
-- **目标：** 为“扣减 → 下单 → 通知/发券”等链路提供可靠消息能力，覆盖生产确认、重试退避、死信隔离、延迟/定时消息与全链路可观测。
-- **可靠投递与一致性：**
-    - 采用 Outbox 模式（本地消息表）：业务事务提交后写入 Outbox，由异步分发器投递至 MQ，保障“写库成功即可投递”的最终一致性。
-    - 消息状态机：`PENDING → SENT → ACKED/FAILED`；失败进入重试，超过阈值入 DLQ（死信队列），支持人工与自动回溯。
-- **成功情况的处理：** 在消息发送成功、消费成功，都有灵活的扩展钩子，方便后续埋点与监控。
-- **各种失败情况的考虑：** 当消息发送失败、消费超时、消费异常、消费失败，等各种失败异常的情况，都有对应的扩展策略，回滚、补偿、上报、通知等。
-- **消费幂等与去重：** 以业务唯一键 `messageId`（uuid）为幂等键，结合幂等组件和幂等标识，避免重复消费影响状态。
-- **可观测与运维：** 暴露发布/消费成功率、重试次数、DLQ 积压量、端到端耗时等指标；提供“停车场（parking-lot）”模式对个别异常消息人工处置。
+```
+Layer 1 实时补偿: Kafka 发送/消费失败 → 立即 Redis 回滚 (指数退避3次+15%jitter)
+Layer 2 定时对账: ReconciliationTaskService
+  ├── redisDeductTraceWithoutDbOrder: Redis 有扣减 DB 无订单 → 回滚库存
+  └── backfillMissingTraceLogs: DB 有日志 Redis 缺 trace → 回填 Redis
+Layer 3 人工兜底: tb_rollback_failure_log + RollbackAlertService 告警
+```
 
-![](https://multimedia-javaup.cn/hmdp-plus/MQ%E7%BB%84%E4%BB%B6%E8%AE%BE%E8%AE%A1.png)
+### 用户认证流程
 
-## 5.2 Redis 组件设计
+```
+发送验证码 → 6位随机数 → Redis (TTL 2min)
+登录 → 校验验证码（成功后立即删除防重放）→ 创建用户 → JWT → Redis (TTL 10h)
+请求拦截 → RefreshTokenInterceptor 刷新 → LoginInterceptor 鉴权
+```
 
-- **目标：** 标准化缓存读写与热点治理，统一 Key 规范、TTL 策略、逻辑过期与异步重建、空值缓存与布隆过滤器、L1+L2 双层缓存。
-- **读写流程与策略：**
-    - 读：本地缓存 → 布隆过滤器 → Redis 命中返回；未命中走“重建锁 + 双重检查 + 负载保护 + DB 查询”，写回实体或空值缓存。
-    - 过期：逻辑过期优先，热点数据先返回旧值再异步重建，削峰填谷；普通数据按 TTL 自然失效。
-    - 预热：活动前/热点店铺提前预热，定时刷新与冷热迁移。
-- **降级与容错：** 支持开关与熔断，异常时走短 TTL 的降级数据或直接回源 DB；关键写路径配合对账日志保障一致性。
-- **布隆与空值缓存：** 布隆过滤器拦截非法键；空值缓存避免穿透风暴，结合短 TTL 与访问计数自动清理。
-- **可观测指标：** 命中率、重建次数/耗时、锁等待、空值比、热点 TopN、序列化开销等。
+---
 
-## 5.3 Redis 限流与令牌桶组件设计
+## 六、Plus 版本改进要点
 
-- **目标：** 在分布式环境下提供高性能、可配置、可观测的令牌桶限流，支撑入口流控与“令牌前置授权”协同。
-- **限流维度：** 支持按 `IP/用户/接口/店铺/活动` 等维度限流，组合维度形成精细化配额；支持突发 `burst` 与滑动窗口辅助。
-- **优先级与白名单：** 支持 VIP/历史高价值用户优先配额、白名单/黑名单、动态在线配置与热更新。
-- **与令牌前置授权协同：** 抢购前需获取“资格令牌”（Redis 统一管理与过期），进入扣减链路前再经令牌桶放行，实现“资格控制 + 速率控制”的双重保障。
-- **接入方式与返回契约：** 网关/接口统一拦截器，调用是否放行及剩余配额；拒绝时返回原因码与重试建议。
-- **监控与告警：** 暴露限流触发次数、放行比、剩余令牌、拒绝原因分布等指标；异常突增触发告警与应急限流策略。
+### 相对于普通版解决的核心问题
 
-<img src="https://multimedia-javaup.cn/hmdp-plus/%E4%BB%A4%E7%89%8C%E6%A1%B6%E7%AE%97%E6%B3%95.png" alt="表关系" width="65%" />
+| 痛点 | 普通版 | Plus 方案 |
+|------|--------|-----------|
+| 流量入口无控制 | 无 | 令牌前置授权 + 令牌桶限流，支持 VIP 优先级 |
+| 库存超卖 | 乐观锁 | Redis + Lua 原子扣减 + DB `WHERE stock>0` 双重保障 |
+| MQ 宕机丢消息 | Redis Stream | Kafka 磁盘持久化 + 多副本 + DLQ |
+| MQ 发送/消费失败 | 无处理 | 生产端回调回滚 + 消费端幂等 + 指数退避重试 |
+| Redis 与 DB 不一致 | 无 | 三层对账（实时补偿+定时对账+人工兜底） |
+| 缓存穿透 | 仅 Redis | 布隆过滤器 + 空值缓存（TTL 2min） |
+| 缓存击穿 | 分布式锁 | 双层锁：外层 @ServiceLock(Read) 并发 + 内层互斥锁同步重建 + 双重检查 |
+| 缓存雪崩 | 无 | TTL 跟随活动结束时间天然分散 + Caffeine 本地缓存 |
+| 分库分表 | 无 | ShardingSphere 2库8分片表 + 雪花算法全局ID + 路由表 |
+| 分布式锁 | 单一可重入锁 | 读锁/写锁/公平锁/非公平锁，注解驱动 @ServiceLock |
+| 一人一单 | SET + 分布式锁 | Redis SET + @ServiceLock 用户维度锁 + @RepeatExecuteLimit 幂等 |
+| 运营能力 | 无 | 每日 Top 买家 (SortedSet) + 到券提醒订阅 + 开抢前2分钟预通知 (延迟队列) |
+| 可观测性 | 无 | Micrometer + Prometheus 指标暴露 |
 
-## 5.4 布隆过滤器的设计
+### 缓存体系：四级纵深防御
 
-- **目标：** 在读链路前置拦截非法 Key/ID，降低缓存穿透与数据库压力，确保热点场景下的稳定性。
-- **核心抽象：** 统一封装添加、存在性判断、批量初始化与误判率配置、按业务分区管理。
-- **构建与维护：**
-    - 初始化：基于数据库合法 ID 集合批量加载；支持分批/分片加载，避免长事务与阻塞。
-    - 增量：新资源上线/变更时通过任务/消息增量写入，保证线上布隆与真实集合一致性收敛。
-- **接入点与协同：**
-    - 在缓存读取前进行 `mightContain(id)` 判断；不存在直接返回空值或错误码，存在则继续缓存/DB 链路。
-    - 与“空值缓存”“缓存客户端”协同，形成防穿透的双保险。
-- **可观测与参数：** 支持误判率、容量与哈希函数数量的动态配置；暴露阻断率、误判样本率与重建开销。
+```
+Caffeine 本地 (max=10000, TTL≤60s) → Redis 无锁快速路径 → 布隆过滤器 (防穿透主力)
+→ 空值缓存 (防穿透兜底, TTL=2min) → 互斥锁 + 双重检查 + MySQL (同步重建)
+```
 
-## 5.5 分布式锁的设计
+缓存失效通过 Kafka 广播到所有实例，消费端 @ServiceLock(Write) 写锁与读锁互斥。
 
-- **目标：** 为热点重建、扣减/下单关键段提供互斥控制，避免并发写冲突与重建风暴。
-- **锁模型与语义：**
-    - 可重入锁与租约（leaseTime）控制，自动续期（看门狗）保障长耗时任务不被误释放。
-    - `tryLock(timeout)` 与 `lock()` 两种语义，支持阻塞/非阻塞与超时回退策略。
-- **接入策略：**
-    - 双重检查 + 锁：重建热点数据前获取锁，完成后释放；失败降级返回旧值或短 TTL 数据。
-    - 关键扣减段使用细粒度锁（按活动/店铺/券），避免大锁引发串行化与吞吐下降。
-- **锁类型：** 支持读锁、写锁、公平锁、非公平锁，满足不同场景需求。
-- **锁的使用：** 提供注解方式、命令式方式、方法级锁等多种接入方式，方便业务方使用。
+### 框架设计亮点
 
-![](https://multimedia-javaup.cn/hmdp-plus/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81.png)
+- **模板方法**：MQ 生产/消费框架（AbstractProducerHandler / AbstractConsumerHandler）
+- **AOP + SpEL**：@ServiceLock / @RepeatExecuteLimit 注解驱动的动态 Key 解析
+- **策略模式 + 条件装配**：限流惩罚策略可插拔（RateLimitPenaltyPolicy）
+- **BeanDefinitionRegistryPostProcessor**：声明式布隆过滤器（YAML 配置自动注册 Bean）
+- **事件驱动**：延迟队列自动装配（监听 ApplicationStartedEvent）
 
-## 5.6 分布式幂等功能的设计
+---
 
-- **目标：** 防重复提交/重复消费，保障“最多一次/恰好一次”的业务语义，降低并发抖动带来的状态污染。
-- **核心抽象：** 注解式接入：，无侵入保护 Controller/Service 方法。
-- **优化策略：** 引入本地锁的功能，实现在同一实例下快速幂等。
-- **应用场景：** 下单接口防重复、MQ 消费端防重、通知发放防重；结合“Outbox + 幂等”形成一致性闭环。
-- **异常与反馈：** 幂等冲突返回明确原因码与重试建议；自动过期释放。
+## 七、运行环境
 
-## 5.7 分布式延迟队列的设计
+### 中间件
 
-- **目标：** 提供高可靠的定时/延迟任务能力，覆盖“开抢前预通知”“订单超时关闭”“补货触达”等场景。
-- **核心抽象：** 提交/拉取/消费接口，支持批量与并发度控制。
-- **实现机制：** 在 Redisson 延迟队列基础下，进行分片拆分设计与线程池结合异步消费，极大提高执行效率。
-- **一致性保障：** 与 Outbox/本地消息表协同，确保“写库成功即产生延迟任务”；消费幂等与去重策略同 MQ 模块。
-- **接入示例：** 活动开始前 2 分钟预通知、订单超时自动关闭与库存回流、订阅用户按优先级触达。
-- **监控与运维：** 队列积压量、到期偏差、任务成功率与重试次数；异常任务进入“停车场”人工处置。
+| 中间件 | 版本 | 端口 | 密码 | 启动方式 |
+|--------|------|------|------|----------|
+| MySQL | 8.0.42 | 3306 | 123456 | 本地服务 |
+| Redis | 6.0.8 | 6379 | 123456 | Docker |
+| ZooKeeper | latest | 2181 | — | Docker |
+| Kafka | wurstmeister/kafka | 9092 | — | Docker |
 
-# 六、各种中间件宕机和数据丢失的解决方案
-将真实生产环境中遇到的宕机问题、数据丢失、问题排查等实际逻辑的解决的方案，都会在黑马点评 Plus 版本中进行应用。
-<img src="https://multimedia-javaup.cn/hmdp-plus/%E6%95%85%E9%9A%9C%E9%9A%BE%E7%82%B9%E8%A7%A3%E5%86%B3.png" alt="表关系" width="100%" />
+```bash
+docker start zookeeper kafka redis
+```
 
-# 七、前端新功能的添加
-黑马点评 Plus 不仅在后端做了大量的改进和优化，同时在前端也新增了一些功能，提升用户体验和系统的整体性能。
-## 7.1 抢购优惠券前的流程优化
-在抢购优惠券的过程中，重新将页面样式进行了优化，提升了用户的视觉体验。
+### 服务端口
 
-<img src="https://multimedia-javaup.cn/hmdp-plus/%E6%88%AA%E5%9B%BE/1.png" alt="表关系" width="35%" />
+| 服务 | 端口 | 地址 |
+|------|------|------|
+| 后端 | 8085 | http://localhost:8085 |
+| 前端 | 5173 | http://localhost:5173 |
 
-## 7.2 抢购优惠券过程中的提示优化
-在抢购优惠券的过程中，会弹出提示框，提示用户正在抢购中，只有在真正的抢购成功后，才会告知用户抢购成功，否则会提示抢购失败。
+### IDEA 启动参数
 
-<img src="https://multimedia-javaup.cn/hmdp-plus/%E6%88%AA%E5%9B%BE/2.png" alt="表关系" width="35%" />
+```
+-XX:MaxMetaspaceSize=256M -Xmx256M
+-Dspring.data.redis.host=127.0.0.1
+-Dspring.data.redis.password=123456
+-Dspring.kafka.bootstrap-servers=10.21.157.139:9092
+-Dprefix.distinction.name=highlight567
+```
 
-## 7.3 如果抢购成功，后续还可以取消
-在抢购成功后，用户可以选择取消抢购的优惠券，这样可以提升用户的灵活性和体验。
+---
 
-<img src="https://multimedia-javaup.cn/hmdp-plus/%E6%88%AA%E5%9B%BE/3.png" alt="表关系" width="35%" />
+## 八、Bug 修复记录（9 个）
 
-## 7.4 到券提醒
-如果优惠券被售罄了，用户还可以选择“到券提醒”，当有新的优惠券放出来时，系统会自动通知用户。
+### Bug #1 分布式锁 key 错误，一人一单限制失效 🔴 严重
 
-<img src="https://multimedia-javaup.cn/hmdp-plus/%E6%88%AA%E5%9B%BE/4.png" alt="表关系" width="35%" />
+- **文件**：`VoucherOrderServiceImpl.java:285`
+- **问题**：`handleVoucherOrder` 中使用 `voucherOrder.getId()` 获取用户 ID，实际取到的是订单 ID，导致 Redisson 锁的 key 错误
+- **影响**：同一用户可以并发下多个秒杀单，"一人一单"机制完全失效
+- **修复**：改为 `voucherOrder.getUserId()`
 
-## 7.5 订阅通知
-当用户选择“到券提醒”后，系统会通知用户已订阅到券提醒。
+### Bug #2 BlogServiceImpl 空 ids 时 SQL 拼接风险 🟡 中等
 
-<img src="https://multimedia-javaup.cn/hmdp-plus/%E6%88%AA%E5%9B%BE/5.png" alt="表关系" width="35%" />
+- **文件**：`BlogServiceImpl.java:135, 206`
+- **问题**：ids 列表为空时 `ORDER BY FIELD(id,)` 产生非法 SQL
+- **修复**：拼接前增加空判断，ids 为空时提前返回
+
+### Bug #3 addVoucher ID 生成竞态条件 🔴 严重
+
+- **文件**：`VoucherServiceImpl.java:96-108`
+- **问题**：通过 `SELECT MAX(id)+1` 生成新 ID，多线程并发下产生重复 ID 导致主键冲突
+- **修复**：改为 `SnowflakeIdGenerator.nextId()` 生成全局唯一 ID
+
+### Bug #4 AopContext.currentProxy() NPE 风险 🟡 中等
+
+- **文件**：`ReconciliationTaskServiceImpl.java`
+- **问题**：多处使用 `AopContext.currentProxy()` 触发事务，若 AOP 上下文异常返回 null 导致 NPE
+- **修复**：注入自身代理 `@Resource private IReconciliationTaskService self`，替换所有 `AopContext.currentProxy()` 调用
+
+### Bug #5 SeckillVoucherConsumer 日志参数顺序错误 🔴 严重
+
+- **文件**：`SeckillVoucherConsumer.java:140`
+- **问题**：日志中 `delayTime` 和 `MESSAGE_DELAY_TIME` 参数位置互换，日志输出误导排查方向
+- **修复**：修正参数顺序
+
+### Bug #6 验证码校验后未删除，存在重放攻击风险 🟡 中等
+
+- **文件**：`UserServiceImpl.java:103`
+- **问题**：验证码校验成功后没有从 Redis 中删除，TTL 过期前可被重复使用
+- **修复**：校验成功后立即执行 `stringRedisTemplate.delete(LOGIN_CODE_KEY + phone)`
+
+### Bug #7 SnowflakeIdGenerator 中 wait() 释放锁风险 🟡 中等
+
+- **文件**：`SnowflakeIdGenerator.java:114`
+- **问题**：时钟回拨处理时调用 `wait()`，会释放 `synchronized` 锁，其他线程可趁机进入 `nextId()`，破坏时间戳单调递增
+- **修复**：改为 `Thread.sleep(offset << 1)` 保持锁不释放
+
+### Bug #8 handleVoucherOrder 抢锁失败直接丢弃订单 🟡 中等
+
+- **文件**：同 Bug #1
+- **问题**：分布式锁获取失败时仅打印日志就 return，订单消息丢失无重试
+- **说明**：修复 Bug #1 后风险显著降低（同用户不会并发抢锁），架构上消息层可加重试机制
+
+### Bug #9 LocalDateTime 与 LocalDateTimeUtil 混用 🟢 轻微
+
+- **文件**：`ReconciliationTaskServiceImpl.java:225,230`
+- **问题**：混用 `LocalDateTime.now()` 和项目统一的 `LocalDateTimeUtil.now()`
+- **修复**：统一使用 `LocalDateTimeUtil.now()`
+
+---
+
+## 九、关键文件索引
+
+| 功能 | 文件路径 |
+|------|---------|
+| 主应用入口 | `flashgo-core-service/.../FlashGoApplication.java` |
+| 秒杀订单服务 | `flashgo-core-service/.../impl/VoucherOrderServiceImpl.java` |
+| 秒杀优惠券服务 | `flashgo-core-service/.../impl/SeckillVoucherServiceImpl.java` |
+| 优惠券服务 | `flashgo-core-service/.../impl/VoucherServiceImpl.java` |
+| 用户服务 | `flashgo-core-service/.../impl/UserServiceImpl.java` |
+| 对账服务 | `flashgo-core-service/.../impl/ReconciliationTaskServiceImpl.java` |
+| Lua 秒杀扣减脚本 | `flashgo-core-service/src/main/resources/lua/seckillVoucher.lua` |
+| Lua 回滚脚本 | `flashgo-core-service/src/main/resources/lua/seckillVoucherRollBack.lua` |
+| Kafka 消费者 | `flashgo-core-service/.../kafka/consumer/SeckillVoucherConsumer.java` |
+| Kafka 生产者 | `flashgo-core-service/.../kafka/producer/SeckillVoucherProducer.java` |
+| Redis 回滚组件 | `flashgo-core-service/.../kafka/redis/RedisVoucherData.java` |
+| 缓存失效广播 | `flashgo-core-service/.../cache/SeckillVoucherCacheInvalidationPublisher.java` |
+| 缓存失效消费 | `flashgo-core-service/.../kafka/consumer/SeckillVoucherInvalidationConsumer.java` |
+| 本地缓存 | `flashgo-core-service/.../cache/SeckillVoucherLocalCache.java` |
+| 雪花 ID 生成器 | `flashgo-id-generator-framework/.../SnowflakeIdGenerator.java` |
+| 分片配置 | `flashgo-core-service/src/main/resources/shardingsphere.yaml` |
+| 应用配置 | `flashgo-core-service/src/main/resources/application.yml` |
+| 分布式锁切面 | `flashgo-redisson-framework/.../aspect/ServiceLockAspect.java` |
+| 幂等切面 | `flashgo-redisson-framework/.../aspect/RepeatExecuteLimitAspect.java` |
+| 限流处理器 | `flashgo-redis-tool-framework/.../execute/RedisRateLimitHandler.java` |
+| MQ 生产者模板 | `flashgo-mq-framework/.../AbstractProducerHandler.java` |
+| MQ 消费者模板 | `flashgo-mq-framework/.../AbstractConsumerHandler.java` |
+| 布隆过滤器封装 | `flashgo-redisson-framework/.../handler/BloomFilterHandler.java` |
+| 缓存封装 | `flashgo-redis-tool-framework/.../RedisCacheImpl.java` |
+| 数据库 SQL | `sql/` 目录 |
+| 前端入口 | `flashgo-vue3/src/main.js` |
+
+---
+
+## 十、启动指南
+
+- [准备项目启动条件](https://javaup.chat/flashgo-plus/startup/prerequisites)
+- [安装中间件环境](https://javaup.chat/flashgo-plus/startup/install-middlewares)
+- [后端部署启动](https://javaup.chat/flashgo-plus/startup/backend-deploy)
+- [前端部署启动](https://javaup.chat/flashgo-plus/startup/frontend-deploy)
+- [项目文档和视频目录](https://javaup.chat/flashgo-plus/overview/project-change)
+
+---
+
+## 十一、前端功能
+
+前端基于 Vue 3 + Element Plus + Pinia，包括：
+
+- 抢购优惠券流程优化（页面样式、抢购中提示弹窗、抢购成功/失败反馈）
+- 抢购成功后支持取消订单
+- 到券提醒：优惠券售罄时可订阅，补货后自动通知
+- 订阅通知：确认订阅状态提示

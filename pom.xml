@@ -20,7 +20,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.javaup</groupId>
-    <artifactId>hmdp-plus</artifactId>
+    <artifactId>flashgo-plus</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
@@ -30,14 +30,14 @@
     </description>
 
     <modules>
-        <module>hmdp-common</module>
-        <module>hmdp-sharding</module>
-        <module>hmdp-core-service</module>
-        <module>hmdp-redisson-framework</module>
-        <module>hmdp-redis-tool-framework</module>
-        <module>hmdp-id-generator-framework</module>
-        <module>hmdp-mq-framework</module>
-        <module>hmdp-parameter</module>
+        <module>flashgo-common</module>
+        <module>flashgo-sharding</module>
+        <module>flashgo-core-service</module>
+        <module>flashgo-redisson-framework</module>
+        <module>flashgo-redis-tool-framework</module>
+        <module>flashgo-id-generator-framework</module>
+        <module>flashgo-mq-framework</module>
+        <module>flashgo-parameter</module>
     </modules>
 
     <properties>
